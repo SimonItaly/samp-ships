@@ -1,0 +1,30 @@
+{
+	"user": "SimonItaly",
+	"repo": "samp-ships",
+	"entry": "test.pwn",
+	"output": "test.amx",
+	"dependencies": [
+    "openmultiplayer/omp-stdlib",
+		"pawn-lang/samp-stdlib@open.mp",
+		"pawn-lang/pawn-stdlib@open.mp",
+		"pawn-lang/YSI-Includes",
+    "samp-incognito/samp-streamer-plugin"
+	],
+	"builds": [
+		{
+			"name": "unit",
+			"constants": {
+				"RUN_TESTS": ""
+			}
+		},
+		{
+			"name": "demo"
+		}
+	],
+	"runtime": {
+		"version": "0.3.7",
+		"mode": "y_testing",
+		"rcon_password": "password",
+		"port": 7777
+	}
+}
