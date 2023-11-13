@@ -78,13 +78,9 @@ Compile options:
 
 \**--------------------------------------------------------------------------**/
 
+#include <open.mp>
+#include <YSI_Data\y_iterate>
 #include <streamer>
-
-#tryinclude <YSI\y_iterate>
-
-#if !defined _Y_ITERATE_LOCAL_VERSION
-	#include <foreach>
-#endif
 
 #if !defined SHIP_STREAMER_SD
     #define SHIP_STREAMER_SD            1000.0
