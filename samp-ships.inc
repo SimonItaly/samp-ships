@@ -20,16 +20,15 @@ Legal:
     http://www.mozilla.org/MPL
 
 Version:
-	1.0
+	1.1
 
 Thanks:
 	adri1, Pottus: (see AttachObjectToObjectEx)
 
 Requirements:
+    https://github.com/pawn-lang/YSI-Includes/
+    https://github.com/pawn-lang/compiler
     https://github.com/samp-incognito/samp-streamer-plugin
-    https://github.com/karimcambridge/SAMP-foreach
-    (or https://github.com/Misiur/YSI-Includes)
-    https://github.com/Zeex/pawn
 
 Changelog:
 	2017/10/XX:
@@ -46,7 +45,7 @@ Functions:
 		StartRouteForShip
 		StopRouteForShip
 	Static:
-		absoluteangle
+		GetAbsoluteAngle
 		GetAngleToPoint
 		GetDistanceBetweenPoints
 		GetXYInDirection
@@ -108,17 +107,16 @@ Compile options:
 
 //==============================================================================
 
-static Float:absoluteangle(Float:a)
-{
-	while(a < 0.0) a += 360.0;
-	while(a > 360.0) a -= 360.0;
-
-	return a;
+#if !defined GetAbsoluteAngle
+stock Float:GetAbsoluteAngle(Float:angle) {
+	// Note that 360 is equal to 0
+	return ((angle / 360.0) - floatround((angle / 360.0), floatround_floor)) * 360.0;
 }
+#endif
 
 static Float:GetAngleToPoint(Float:fPointX, Float:fPointY, Float:fDestX, Float:fDestY)
 {
-	return absoluteangle(-(90-(atan2((fDestY - fPointY), (fDestX - fPointX)))));
+	return GetAbsoluteAngle(-(90-(atan2((fDestY - fPointY), (fDestX - fPointX)))));
 }
 
 static Float:GetDistanceBetweenPoints(Float:x1, Float:y1, Float:z1, Float:x2, Float:y2, Float:z2)
@@ -285,7 +283,7 @@ stock DestroyShip(ship_id)
 	-
 </remarks>
 \**--------------------------------------------------------------------------**/
-stock SetShipBodyMaterial(ship_id, objectid, txd[], material[], color = 0xFFFFFFFF)
+stock SetShipBodyMaterial(ship_id, objectid, const txd[], const material[], color = 0xFFFFFFFF)
 {
     if(!Iter_Contains(Ship, ship_id))
         return 0;
@@ -323,8 +321,8 @@ enum
     CONTAINER_BLUE,
     CONTAINER_YELLOW
 }
-stock SetShipContainerMaterial(ship_id, container_type, objectid_body, txd_body[], material_body[],
-                                                        objectid_doors, txd_doors[], material_doors[], color = 0xFFFFFFFF)
+stock SetShipContainerMaterial(ship_id, container_type, objectid_body, const txd_body[], const material_body[],
+                                                        objectid_doors, const txd_doors[], const material_doors[], color = 0xFFFFFFFF)
 {
     if(!Iter_Contains(Ship, ship_id))
         return 0;
@@ -511,15 +509,15 @@ public ship_route_execute(ship_id, step)
                             route_info[route_id][step+1][0], route_info[route_id][step+1][1]);
 
     angle -= 90.0;
-    angle = absoluteangle(angle);
+    angle = GetAbsoluteAngle(angle);
 
     #if defined DEBUG_SHIP_INC
         printf("ship_route_execute: rot from %.2f to %.2f", current, angle);
 
-        current = absoluteangle(current);
+        current = GetAbsoluteAngle(current);
         
-        new Float:dest_cur = absoluteangle(angle - current);
-        new Float:cur_dest = absoluteangle(current - angle);
+        new Float:dest_cur = GetAbsoluteAngle(angle - current);
+        new Float:cur_dest = GetAbsoluteAngle(current - angle);
 
         new Float:rot_step = ship_info[ship_id][ship_rot_step];
         if(cur_dest > dest_cur)
@@ -570,8 +568,8 @@ public ship_rot(ship_id, Float:a, Float:dest, step, status)
         return;
     }
 
-    a = absoluteangle(a);
-    dest = absoluteangle(dest);
+    a = GetAbsoluteAngle(a);
+    dest = GetAbsoluteAngle(dest);
 
     SetDynamicObjectRot(ship_info[ship_id][ship_part][0], 0.0, 0.0, a);
 
@@ -591,13 +589,13 @@ public ship_rot(ship_id, Float:a, Float:dest, step, status)
         SetDynamicObjectRot(ship_info[ship_id][ship_part][i+1], newrx, newry, newrz);
     }
 
-	a = absoluteangle(a);
-	dest = absoluteangle(dest);
+	a = GetAbsoluteAngle(a);
+	dest = GetAbsoluteAngle(dest);
 
     if (!status)
     {
-        dest_cur = absoluteangle(dest - a),
-		cur_dest = absoluteangle(a - dest);
+        dest_cur = GetAbsoluteAngle(dest - a),
+		cur_dest = GetAbsoluteAngle(a - dest);
 
         if(cur_dest > dest_cur)
 		{
@@ -660,23 +658,26 @@ public ship_rot(ship_id, Float:a, Float:dest, step, status)
         #endif
 
         //Once the movement has been completed, get to the next step
-        SetTimerEx("ship_route_execute", completion, 0, "ii", ship_id, step+1);
+        SetTimerEx("ship_route_execute", completion, false, "ii", ship_id, step+1);
     }
 }
 
 //==============================================================================
 
+#if !defined GetXYInDirection
 static GetXYInDirection(& Float: X, & Float: Y, Float: Angle, Float: distance = 1.0)
 {
     X -= (floatsin(Angle, degrees) * distance);
     Y += (floatcos(Angle, degrees) * distance);
 }
+#endif
 
 /*
     Thanks to adri1 & Pottus for the following function(s):
     http://forum.sa-mp.com/showpost.php?p=3144750&postcount=4
 */
 
+//#if !defined AttachObjectToObjectEx
 static AttachObjectToObjectEx(attachoid, Float:off_x, Float:off_y, Float:off_z, Float:rot_x, Float:rot_y, Float:rot_z, &Float:X, &Float:Y, &Float:Z, &Float:RX, &Float:RY, &Float:RZ, Float:erroroff = 0.0) // By Stylock - [url]http://forum.sa-mp.com/member.php?u=114165[/url]
 {
     static
@@ -746,3 +747,4 @@ static EDIT_FloatRemainder(&Float:remainder, Float:value)
     }
     return 1;
 }
+//#endif
